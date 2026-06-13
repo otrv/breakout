@@ -143,7 +143,9 @@ int main(void) {
           }
 
           if (CheckCollisionRecs(player->rect, entity->rect)) {
-            entity->vel.y *= -1;
+            if (entity->vel.y > 0) {
+              entity->vel.y *= -1;
+            }
           }
           break;
         case ENEMY:
