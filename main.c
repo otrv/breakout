@@ -10,10 +10,7 @@ enum EntityKind {
 };
 
 typedef struct {
-  int32_t x;
-  int32_t y;
-  uint32_t w;
-  uint32_t h;
+  Rectangle rect;
   int32_t vel_x;
   int32_t vel_y;
   Color color;
@@ -40,7 +37,8 @@ typedef struct {
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
 bool check_aabb(Entity *a, Entity *b) {
-  return (a->x < b->x + b->w && a->x + a->w > b->x && a->y < b->y + b->h && a->y + a->h > b->y);
+  return (a->rect.x < b->rect.x + b->rect.width && a->rect.x + a->rect.width > b->rect.x &&
+          a->rect.y < b->rect.y + b->rect.height && a->rect.y + a->rect.height > b->rect.y);
 }
 
 int main(void) {
@@ -52,10 +50,13 @@ int main(void) {
   Entity entities[ENTITY_COUNT];
 
   entities[0] = (Entity){
-      .w = PLAYER_WIDTH,
-      .h = PLAYER_HEIGTH,
-      .x = SCREEN_WIDTH / 2 - 60,
-      .y = 1450,
+      .rect =
+          (Rectangle){
+              .width = PLAYER_WIDTH,
+              .height = PLAYER_HEIGTH,
+              .x = SCREEN_WIDTH / 2 - 60,
+              .y = 1450,
+          },
       .color = GREEN,
       .alive = true,
       .kind = PLAYER,
@@ -63,10 +64,13 @@ int main(void) {
 
   entities[1] = (Entity){
       .color = WHITE,
-      .w = BALL_SIZE,
-      .h = BALL_SIZE,
-      .x = entities[0].x + (PLAYER_WIDTH / 2) - (BALL_SIZE / 2),
-      .y = entities[0].y - BALL_SIZE,
+      .rect =
+          (Rectangle){
+              .width = BALL_SIZE,
+              .height = BALL_SIZE,
+              .x = entities[0].rect.x + (PLAYER_WIDTH / 2) - (BALL_SIZE / 2),
+              .y = entities[0].rect.y - BALL_SIZE,
+          },
       .vel_x = -300.0f,
       .vel_y = -300.0f,
       .alive = true,
@@ -84,10 +88,13 @@ int main(void) {
     int y = (row - 1) * (ENEMY_SIZE + ENEMY_PADDING) + (ENEMY_PADDING / 2);
 
     entities[i + 2] = (Entity){
-        .w = ENEMY_SIZE,
-        .h = ENEMY_SIZE,
-        .x = x,
-        .y = y,
+        .rect =
+            (Rectangle){
+                .width = ENEMY_SIZE,
+                .height = ENEMY_SIZE,
+                .x = x,
+                .y = y,
+            },
         .color = RED,
         .alive = true,
         .kind = ENEMY,
@@ -114,11 +121,11 @@ int main(void) {
         }
         break;
       case BALL:
-        if (entity->x <= 0 || entity->x >= SCREEN_WIDTH - BALL_SIZE) {
+        if (entity->rect.x <= 0 || entity->rect.x >= SCREEN_WIDTH - BALL_SIZE) {
           entity->vel_x = -entity->vel_x;
         }
 
-        if (entity->y <= 0 || entity->y >= SCREEN_HEIGHT - BALL_SIZE) {
+        if (entity->rect.y <= 0 || entity->rect.y >= SCREEN_HEIGHT - BALL_SIZE) {
           entity->vel_y = -entity->vel_y;
         }
 
@@ -136,13 +143,13 @@ int main(void) {
         break;
       }
 
-      entity->x += entity->vel_x * dt;
-      entity->y += entity->vel_y * dt;
-      entity->x = MAX(0, entity->x);
-      entity->x = MIN(SCREEN_WIDTH - entity->w, entity->x);
+      entity->rect.x += entity->vel_x * dt;
+      entity->rect.y += entity->vel_y * dt;
+      entity->rect.x = MAX(0, entity->rect.x);
+      entity->rect.x = MIN(SCREEN_WIDTH - entity->rect.width, entity->rect.x);
 
       if (entity->alive) {
-        DrawRectangle(entity->x, entity->y, entity->w, entity->h, entity->color);
+        DrawRectangleRec(entity->rect, entity->color);
       }
     }
 
