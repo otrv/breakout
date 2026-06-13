@@ -35,11 +35,6 @@ typedef struct {
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
-bool check_aabb(Entity *a, Entity *b) {
-  return (a->rect.x < b->rect.x + b->rect.width && a->rect.x + a->rect.width > b->rect.x &&
-          a->rect.y < b->rect.y + b->rect.height && a->rect.y + a->rect.height > b->rect.y);
-}
-
 int main(void) {
   InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "breakout");
 
@@ -128,14 +123,14 @@ int main(void) {
           entity->vel.y = -entity->vel.y;
         }
 
-        if (check_aabb(player, entity)) {
-          entity->vel.y = -entity->vel.y;
+        if (CheckCollisionRecs(player->rect, entity->rect)) {
+          entity->vel.y *= -1;
         }
         break;
       case ENEMY:
         if (entity->alive) {
-          if (check_aabb(ball, entity)) {
-            ball->vel.y = -ball->vel.y;
+          if (CheckCollisionRecs(ball->rect, entity->rect)) {
+            ball->vel.y *= -1;
             entity->alive = false;
           }
         }
