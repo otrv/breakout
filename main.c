@@ -11,8 +11,7 @@ enum EntityKind {
 
 typedef struct {
   Rectangle rect;
-  int32_t vel_x;
-  int32_t vel_y;
+  Vector2 vel;
   Color color;
   bool alive;
   enum EntityKind kind;
@@ -54,7 +53,7 @@ int main(void) {
           (Rectangle){
               .width = PLAYER_WIDTH,
               .height = PLAYER_HEIGTH,
-              .x = SCREEN_WIDTH / 2 - 60,
+              .x = (float)SCREEN_WIDTH / 2 - 60,
               .y = 1450,
           },
       .color = GREEN,
@@ -68,11 +67,11 @@ int main(void) {
           (Rectangle){
               .width = BALL_SIZE,
               .height = BALL_SIZE,
-              .x = entities[0].rect.x + (PLAYER_WIDTH / 2) - (BALL_SIZE / 2),
+              .x = entities[0].rect.x + ((float)PLAYER_WIDTH / 2) - ((float)BALL_SIZE / 2),
               .y = entities[0].rect.y - BALL_SIZE,
           },
-      .vel_x = -300.0f,
-      .vel_y = -300.0f,
+      .vel.x = -300.0f,
+      .vel.y = -300.0f,
       .alive = true,
       .kind = BALL,
   };
@@ -113,38 +112,38 @@ int main(void) {
       switch (entity->kind) {
       case PLAYER:
         if (IsKeyDown(KEY_D)) {
-          player->vel_x = PLAYER_VELOCITY;
+          player->vel.x = PLAYER_VELOCITY;
         } else if (IsKeyDown(KEY_A)) {
-          player->vel_x = -PLAYER_VELOCITY;
+          player->vel.x = -PLAYER_VELOCITY;
         } else {
-          player->vel_x = 0;
+          player->vel.x = 0;
         }
         break;
       case BALL:
         if (entity->rect.x <= 0 || entity->rect.x >= SCREEN_WIDTH - BALL_SIZE) {
-          entity->vel_x = -entity->vel_x;
+          entity->vel.x = -entity->vel.x;
         }
 
         if (entity->rect.y <= 0 || entity->rect.y >= SCREEN_HEIGHT - BALL_SIZE) {
-          entity->vel_y = -entity->vel_y;
+          entity->vel.y = -entity->vel.y;
         }
 
         if (check_aabb(player, entity)) {
-          entity->vel_y = -entity->vel_y;
+          entity->vel.y = -entity->vel.y;
         }
         break;
       case ENEMY:
         if (entity->alive) {
           if (check_aabb(ball, entity)) {
-            ball->vel_y = -ball->vel_y;
+            ball->vel.y = -ball->vel.y;
             entity->alive = false;
           }
         }
         break;
       }
 
-      entity->rect.x += entity->vel_x * dt;
-      entity->rect.y += entity->vel_y * dt;
+      entity->rect.x += entity->vel.x * dt;
+      entity->rect.y += entity->vel.y * dt;
       entity->rect.x = MAX(0, entity->rect.x);
       entity->rect.x = MIN(SCREEN_WIDTH - entity->rect.width, entity->rect.x);
 
