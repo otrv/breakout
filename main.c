@@ -35,13 +35,13 @@ typedef struct {
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
-int main(void) {
-  InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "breakout");
+Entity entities[ENTITY_COUNT];
+Entity *player;
+Entity *ball;
+bool started;
 
-  SetTargetFPS(60);
-
-  // 2 for player and ball
-  Entity entities[ENTITY_COUNT];
+void ResetGame() {
+  started = false;
 
   entities[0] = (Entity){
       .rect =
@@ -71,8 +71,8 @@ int main(void) {
       .kind = BALL,
   };
 
-  Entity *player = &entities[0];
-  Entity *ball = &entities[1];
+  player = &entities[0];
+  ball = &entities[1];
 
   for (int i = 0; i < ENEMY_COUNT; i++) {
     int row = floor((float)i / ENEMY_PER_ROW) + 1;
@@ -94,6 +94,14 @@ int main(void) {
         .kind = ENEMY,
     };
   }
+}
+
+int main(void) {
+  InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "breakout");
+
+  SetTargetFPS(60);
+
+  ResetGame();
 
   while (!WindowShouldClose()) {
     float dt = GetFrameTime();
@@ -101,49 +109,61 @@ int main(void) {
     BeginDrawing();
     ClearBackground(BLACK);
 
-    for (int i = 0; i < ENTITY_COUNT; i++) {
-      Entity *entity = &entities[i];
-
-      switch (entity->kind) {
-      case PLAYER:
-        if (IsKeyDown(KEY_D)) {
-          player->vel.x = PLAYER_VELOCITY;
-        } else if (IsKeyDown(KEY_A)) {
-          player->vel.x = -PLAYER_VELOCITY;
-        } else {
-          player->vel.x = 0;
-        }
-        break;
-      case BALL:
-        if (entity->rect.x <= 0 || entity->rect.x >= SCREEN_WIDTH - BALL_SIZE) {
-          entity->vel.x = -entity->vel.x;
-        }
-
-        if (entity->rect.y <= 0 || entity->rect.y >= SCREEN_HEIGHT - BALL_SIZE) {
-          entity->vel.y = -entity->vel.y;
-        }
-
-        if (CheckCollisionRecs(player->rect, entity->rect)) {
-          entity->vel.y *= -1;
-        }
-        break;
-      case ENEMY:
-        if (entity->alive) {
-          if (CheckCollisionRecs(ball->rect, entity->rect)) {
-            ball->vel.y *= -1;
-            entity->alive = false;
-          }
-        }
-        break;
+    if (!started) {
+      if (IsKeyDown(KEY_SPACE)) {
+        started = true;
       }
 
-      entity->rect.x += entity->vel.x * dt;
-      entity->rect.y += entity->vel.y * dt;
-      entity->rect.x = MAX(0, entity->rect.x);
-      entity->rect.x = MIN(SCREEN_WIDTH - entity->rect.width, entity->rect.x);
+      DrawText("Press Space to start!", SCREEN_WIDTH / 2 - 125, SCREEN_HEIGHT / 2, 20, LIGHTGRAY);
+    } else {
+      for (int i = 0; i < ENTITY_COUNT; i++) {
+        Entity *entity = &entities[i];
 
-      if (entity->alive) {
-        DrawRectangleRec(entity->rect, entity->color);
+        switch (entity->kind) {
+        case PLAYER:
+          if (IsKeyDown(KEY_D)) {
+            player->vel.x = PLAYER_VELOCITY;
+          } else if (IsKeyDown(KEY_A)) {
+            player->vel.x = -PLAYER_VELOCITY;
+          } else {
+            player->vel.x = 0;
+          }
+          break;
+        case BALL:
+          if (entity->rect.x <= 0 || entity->rect.x >= SCREEN_WIDTH - BALL_SIZE) {
+            entity->vel.x = -entity->vel.x;
+          }
+
+          if (entity->rect.y >= SCREEN_HEIGHT - BALL_SIZE) {
+            ResetGame();
+          }
+
+          if (entity->rect.y <= 0) {
+            entity->vel.y = -entity->vel.y;
+          }
+
+          if (CheckCollisionRecs(player->rect, entity->rect)) {
+            entity->vel.y *= -1;
+          }
+          break;
+        case ENEMY:
+          if (entity->alive) {
+            if (CheckCollisionRecs(ball->rect, entity->rect)) {
+              ball->vel.y *= -1;
+              entity->alive = false;
+            }
+          }
+          break;
+        }
+
+        entity->rect.x += entity->vel.x * dt;
+        entity->rect.y += entity->vel.y * dt;
+        entity->rect.x = MAX(0, entity->rect.x);
+        entity->rect.x = MIN(SCREEN_WIDTH - entity->rect.width, entity->rect.x);
+
+        if (entity->alive) {
+          DrawRectangleRec(entity->rect, entity->color);
+        }
       }
     }
 
